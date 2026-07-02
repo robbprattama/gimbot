@@ -1,96 +1,61 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <title>Tetris Sederhana</title>
+    <meta charset="UTF-8">
+    <title>Matrix Effect Fullscreen</title>
     <style>
-        body { background: #202028; color: #fff; text-align: center; font-family: sans-serif; }
-        canvas { border: solid .2em #fff; height: 90vh; }
+        body { margin: 0; padding: 0; background: black; overflow: hidden; }
+        canvas { display: block; }
     </style>
 </head>
 <body>
-    <div id="score">Skor: 0</div>
-    <canvas id="tetris" width="240" height="400"></canvas>
+
+<canvas id="matrix"></canvas>
+
 <script>
-const canvas = document.getElementById('tetris');
-const context = canvas.getContext('2d');
-context.scale(20, 20);
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
 
-function arenaMatrix(w, h) {
-    const matrix = [];
-    while (h--) matrix.push(new Array(w).fill(0));
-    return matrix;
-}
-
-function draw() {
-    context.fillStyle = '#000';
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    drawMatrix(arena, {x: 0, y: 0});
-    drawMatrix(player.matrix, player.pos);
-}
-
-function drawMatrix(matrix, offset) {
-    matrix.forEach((row, y) => {
-        row.forEach((value, x) => {
-            if (value !== 0) {
-                context.fillStyle = 'red';
-                context.fillRect(x + offset.x, y + offset.y, 1, 1);
-            }
-        });
-    });
-}
-
-function merge(arena, player) {
-    player.matrix.forEach((row, y) => {
-        row.forEach((value, x) => {
-            if (value !== 0) arena[y + player.pos.y][x + player.pos.x] = value;
-        });
-    });
-}
-
-function playerDrop() {
-    player.pos.y++;
-    if (collide(arena, player)) {
-        player.pos.y--;
-        merge(arena, player);
-        player.pos.y = 0;
-        player.pos.x = 0;
+    // Mengatur canvas agar fullscreen
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
     }
-    dropCounter = 0;
-}
+    window.addEventListener('resize', resize);
+    resize();
 
-function collide(arena, player) {
-    const [m, o] = [player.matrix, player.pos];
-    for (let y = 0; y < m.length; ++y) {
-        for (let x = 0; x < m[y].length; ++x) {
-            if (m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) return true;
+    // Karakter Matrix (bisa ditambah karakter lain)
+    const chars = "01アｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ";
+    const fontSize = 16;
+    let columns = canvas.width / fontSize;
+    const drops = [];
+
+    // Inisialisasi posisi awal setiap kolom
+    for (let x = 0; x < columns; x++) {
+        drops[x] = 1;
+    }
+
+    function draw() {
+        // Efek transparan untuk jejak karakter
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = '#0F0'; // Warna hijau khas Matrix
+        ctx.font = fontSize + 'px monospace';
+
+        for (let i = 0; i < drops.length; i++) {
+            const text = chars.charAt(Math.floor(Math.random() * chars.length));
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+            // Mengembalikan ke atas secara acak setelah mencapai bawah
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                drops[i] = 0;
+            }
+            drops[i]++;
         }
     }
-    return false;
-}
 
-const arena = arenaMatrix(12, 20);
-const player = { pos: {x: 5, y: 0}, matrix: [[1, 1, 1], [0, 1, 0], [0, 0, 0]] };
-
-let dropCounter = 0;
-let dropInterval = 1000;
-let lastTime = 0;
-
-function update(time = 0) {
-    const deltaTime = time - lastTime;
-    lastTime = time;
-    dropCounter += deltaTime;
-    if (dropCounter > dropInterval) playerDrop();
-    draw();
-    requestAnimationFrame(update);
-}
-
-document.addEventListener('keydown', event => {
-    if (event.keyCode === 37) player.pos.x--;
-    else if (event.keyCode === 39) player.pos.x++;
-    else if (event.keyCode === 40) playerDrop();
-});
-
-update();
+    setInterval(draw, 33);
 </script>
 </body>
 </html>
